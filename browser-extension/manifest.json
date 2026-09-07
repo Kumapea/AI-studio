@@ -1,0 +1,59 @@
+{
+  "manifest_version": 3,
+  "name": "AI制片台｜剧本标注与AI导演",
+  "version": "4.0.0",
+  "description": "AI制片台：把粗剧本逐层翻译成影视执行层与 LibTV Prompt。用户负责说人话，AI负责懂影视。无需 API Key。",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "action": {
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png"
+    },
+    "default_title": "打开 AI 视频制片台"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "storage",
+    "sidePanel",
+    "tabs"
+  ],
+  "host_permissions": [
+    "*://*.douyin.com/*",
+    "*://chat.deepseek.com/*",
+    "*://*.kimi.com/*",
+    "*://chatgpt.com/*",
+    "*://gemini.google.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.douyin.com/*"
+      ],
+      "js": [
+        "content-scripts/douyin-capture.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "*://chat.deepseek.com/*",
+        "*://*.kimi.com/*"
+      ],
+      "js": [
+        "content-scripts/chat-inject.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}

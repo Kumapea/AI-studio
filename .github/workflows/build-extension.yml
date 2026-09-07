@@ -1,0 +1,18 @@
+name: Build Chrome Extension
+on:
+  workflow_dispatch:
+  push:
+    paths: ['browser-extension/**', '.github/workflows/build-extension.yml']
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Package extension
+        run: |
+          cd browser-extension
+          zip -r ../AI制片台-Chrome-V3.zip . -x '*.DS_Store'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AI制片台-Chrome-V3
+          path: AI制片台-Chrome-V3.zip

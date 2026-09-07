@@ -1,0 +1,1477 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>剧本标注工作台</title>
+  <style>
+    :root {
+      --bg: #0f0f12;
+      --surface: #1a1a1f;
+      --surface-hover: #222228;
+      --border: #2a2a30;
+      --text: #e8e8ec;
+      --text-muted: #888895;
+      --accent: #4f8cff;
+      --accent-hover: #6a9fff;
+      --accent-dim: rgba(79, 140, 255, 0.15);
+      --paper: #ffffff;
+      --paper-ink: #1a1a1a;
+      --paper-muted: #6b6b72;
+      --paper-border: #e2e2e6;
+      --paper-toolbar: #f4f4f6;
+      --paper-accent: #1a5fd7;
+      --danger: #ff5f5f;
+      --success: #4ade80;
+      --warning: #fbbf24;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+      --radius: 10px;
+      --shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      line-height: 1.6;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    /* ===== Header ===== */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 20px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+
+    header h1 {
+      font-size: 16px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 6px 14px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface-hover);
+      color: var(--text);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn:hover {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+    }
+
+    .btn.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .btn.primary:hover {
+      background: var(--accent-hover);
+    }
+
+    /* ===== Main ===== */
+    main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      gap: 1px;
+      background: var(--border);
+    }
+
+    /* ===== Text Panel（白底黑字稿纸区） ===== */
+    .text-panel {
+      flex: 1.2;
+      display: flex;
+      flex-direction: column;
+      background: var(--paper);
+      color: var(--paper-ink);
+      min-width: 0;
+    }
+
+    .text-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 10px 16px;
+      background: var(--paper-toolbar);
+      color: var(--paper-ink);
+      border-bottom: 1px solid var(--paper-border);
+      font-size: 13px;
+    }
+
+    .text-toolbar .hint {
+      color: var(--paper-muted);
+      font-size: 12px;
+    }
+
+    #editor {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      outline: none;
+      font-size: 14px;
+      line-height: 2;
+      background: var(--paper);
+      color: var(--paper-ink);
+      caret-color: var(--paper-ink);
+    }
+
+    #editor:focus {
+      background: #fdfdff;
+    }
+
+    /* Tag styling inside editor（白底上用深蓝保证对比度） */
+    #editor .tag {
+      display: inline;
+      color: var(--paper-accent);
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    #editor .tag:hover {
+      text-decoration: underline;
+    }
+
+    /* ===== Options Panel ===== */
+    .options-panel {
+      flex: 0.9;
+      display: flex;
+      flex-direction: column;
+      background: var(--surface);
+      min-width: 280px;
+      max-width: 380px;
+    }
+
+    .options-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    #optionsContainer {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 0;
+    }
+
+    .category {
+      margin-bottom: 4px;
+    }
+
+    .category-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      transition: background 0.2s;
+      user-select: none;
+    }
+
+    .category-header:hover {
+      background: var(--surface-hover);
+    }
+
+    .category-header .toggle-icon {
+      font-size: 11px;
+      transition: transform 0.2s;
+      color: var(--text-muted);
+    }
+
+    .category.collapsed .toggle-icon {
+      transform: rotate(-90deg);
+    }
+
+    .category-items {
+      padding: 4px 16px 8px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+    }
+
+    .category.collapsed .category-items {
+      display: none;
+    }
+
+    .option-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-size: 12px;
+      user-select: none;
+    }
+
+    .option-item:hover {
+      background: var(--surface-hover);
+    }
+
+    .option-item.selected {
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    .option-item input[type="checkbox"] {
+      width: 14px;
+      height: 14px;
+      accent-color: var(--accent);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .option-item label {
+      cursor: pointer;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    
+    /* 双击词汇编辑提示 */
+    .option-item label {
+      position: relative;
+    }
+
+    .option-item.editable:hover label::after {
+      content: '双击编辑';
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      padding-left: 8px;
+      background: linear-gradient(90deg, transparent, var(--surface) 25%);
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 400;
+    }
+
+    .option-item.selected:hover label::after {
+      background: linear-gradient(90deg, transparent, var(--accent-dim) 25%);
+      color: var(--accent);
+    }
+
+    /* ===== Footer ===== */
+    footer {
+      padding: 8px 20px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    #statusText {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 60%;
+    }
+
+    #shortcutHint {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    kbd {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 11px;
+      font-family: monospace;
+    }
+
+    /* ===== Modal ===== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      width: 400px;
+      max-width: 90vw;
+      box-shadow: var(--shadow);
+    }
+
+    .modal h3 {
+      margin-bottom: 16px;
+      font-size: 15px;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+    }
+
+    .form-group input:focus, .form-group select:focus {
+      border-color: var(--accent);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3a3a40; }
+
+    .text-panel ::-webkit-scrollbar-thumb { background: #cfcfd6; }
+    .text-panel ::-webkit-scrollbar-thumb:hover { background: #b5b5bd; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      main { flex-direction: column; }
+      .options-panel {
+        max-width: none;
+        flex: none;
+        height: 40vh;
+        min-width: 0;
+      }
+      #statusText { max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>🎬 剧本标注工作台 <span style="font-size:11px;color:var(--text-muted);font-weight:400">剧本 → 导演 → LibTV</span></h1>
+      <div class="toolbar">
+        <button class="btn" id="undoBtn" title="撤销上次标注 (Ctrl+Z)">↩ 撤销</button>
+        <button class="btn" id="addVocabBtn" title="添加新词汇到词库">+ 添加词汇</button>
+        <button class="btn" id="exportVocabBtn" title="导出词库备份（.json），升级/换设备后导入即可恢复">⬇ 词库</button>
+        <button class="btn" id="importVocabBtn" title="导入词库备份（.json），与现有词库合并">⬆ 词库</button>
+        <button class="btn" id="importBtn" title="导入 .txt / .md / .docx / .xlsx">📂 导入</button>
+        <button class="btn" id="aiDeepenBtn" title="把当前剧本交给 AI 自动完成构图、景别、运镜、动作和 LibTV 提示词">✦ AI导演深化</button>
+        <button class="btn primary" id="exportBtn" title="导出为 Word (.docx) 文档">💾 导出 docx</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="text-panel">
+        <div class="text-toolbar">
+          <span>📝 剧本·脚本文本区</span>
+          <span class="hint">选中文本 → 右侧勾选 → 按 Enter 标注；双击右侧词汇可编辑</span>
+        </div>
+        <div id="editor" contenteditable="true" spellcheck="false"></div>
+      </section>
+
+      <section class="options-panel">
+        <div class="options-header">
+          <span>🏷️ 标注选项</span>
+          <button class="btn" id="clearSelectionBtn" style="padding:4px 10px;font-size:12px;">清除选择</button>
+        </div>
+        <div id="optionsContainer"></div>
+      </section>
+    </main>
+
+    <footer>
+      <span id="statusText">就绪</span>
+      <div id="shortcutHint">
+        <span><kbd>Ctrl</kbd>+<kbd>Z</kbd> 撤销</span>
+        <span><kbd>Enter</kbd> 应用标注</span>
+        <span><kbd>Esc</kbd> 清除选择</span>
+        <span>双击右侧词汇编辑</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Add Vocabulary Modal -->
+  <div class="modal-overlay" id="addVocabModal">
+    <div class="modal">
+      <h3>➕ 添加新词汇</h3>
+      <div class="form-group">
+        <label>选择或新建分类</label>
+        <select id="vocabCategory">
+          <option value="_new">+ 新建分类</option>
+        </select>
+      </div>
+      <div class="form-group" id="newCategoryGroup" style="display:none;">
+        <label>新分类名称</label>
+        <input type="text" id="newCategory" placeholder="如：灯光">
+      </div>
+      <div class="form-group">
+        <label>词汇（可添加多个，用逗号或换行分隔）</label>
+        <input type="text" id="newVocab" placeholder="如：侧逆光，轮廓光，眼神光">
+      </div>
+      <div class="modal-actions">
+        <button class="btn" id="cancelAddBtn">取消</button>
+        <button class="btn primary" id="confirmAddBtn">添加</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Vocabulary Modal -->
+  <div class="modal-overlay" id="editVocabModal">
+    <div class="modal">
+      <h3>✏️ 修改选项词汇</h3>
+      <div class="form-group">
+        <label>所属分类</label>
+        <input type="text" id="editVocabCategory" readonly>
+      </div>
+      <div class="form-group">
+        <label>词汇</label>
+        <input type="text" id="editVocabInput" placeholder="输入新的词汇名称">
+        <div style="margin-top:6px;font-size:11px;color:var(--text-muted);">
+          只修改右侧词库中的显示名称，不会修改已经插入剧本里的历史标注。
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn" id="cancelEditBtn">取消</button>
+        <button class="btn primary" id="confirmEditBtn">保存修改</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Director Modal -->
+  <div class="modal-overlay" id="aiDirectorModal">
+    <div class="modal" style="width:680px;max-width:94vw">
+      <h3>✦ AI导演深化</h3>
+      <p style="color:var(--text-muted);font-size:12px;margin:-6px 0 14px">你只负责先把剧本写出来。AI自动补齐：镜头观察方式 → 构图/景别/机位 → 运镜 → 动作与情绪 → LibTV Prompt。</p>
+      <div class="form-group">
+        <label>当前剧本</label>
+        <textarea id="aiDirectorScript" rows="9" style="width:100%;padding:10px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;resize:vertical"></textarea>
+      </div>
+      <div class="form-group">
+        <label>AI大脑</label>
+        <select id="aiDirectorProvider">
+          <option value="deepseek">DeepSeek</option>
+          <option value="kimi">Kimi</option>
+          <option value="gpt">GPT</option>
+          <option value="gemini">Gemini</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn" id="aiDirectorCancel">取消</button>
+        <button class="btn" id="aiDirectorCopy">复制任务</button>
+        <button class="btn primary" id="aiDirectorSend">交给 AI</button>
+      </div>
+      <div id="aiDirectorStatus" style="margin-top:10px;color:var(--text-muted);font-size:12px;line-height:1.5"></div>
+    </div>
+  </div>
+
+  <!-- Hidden file input for import -->
+  <input type="file" id="fileInput" accept=".txt,.md,.docx,.xlsx" style="display:none;">
+  <!-- Hidden file input for vocabulary import -->
+  <input type="file" id="vocabFileInput" accept=".json" style="display:none;">
+
+  <script src="../../js/handoff.js"></script>
+  <script>
+    // =====================
+    // 词汇库（默认 + 用户扩展）
+    // 分类顺序：部位在最前，其余向后顺移
+    // =====================
+    const defaultVocab = {
+      '部位': [
+        '面部', '正脸', '侧脸', '眼睛', '双眸', '嘴', '嘴鼻', '耳朵',
+        '头部', '上半身', '手部', '双手', '手指', '脚步', '膝盖',
+        '腿', '下半身', '全身', '背影', '肩背', '头发', '尾巴'
+      ],
+      '景别': ['远景', '全景', '中景', '中近景', '近景', '特写', '大特写'],
+      '运镜': [
+        '主观视角', 'POV', '仰拍', '低角度仰拍', '俯拍', '微微俯拍', '侧拍',
+        '自拍视角', '过肩镜头', '正面直拍', '背面拍摄', '急摇', '跟拍',
+        '推进', '拉远', '环绕', '上升', '绕到背后', '晃动', '剧烈抖动',
+        '虚焦', '聚焦切换', '前景遮挡', '黑屏', '叠化', '强光转场',
+        '超广角', '广角镜头', '背景虚化'
+      ],
+      '方位': [
+        '左侧', '右侧', '画外', '入画', '上方', '下方',
+        '右下', '右上', '左上', '左下', '前景', '远景',
+        '模糊虚焦', '大光圈', '聚焦'
+      ],
+      '情绪效果': [
+        '压迫感', '沉浸感', '紧张', '冲击', '转折',
+        '孤独', '崇敬', '弱势', '渺小感'
+      ]
+    };
+
+    // 已有存档也按此顺序重排（自定义分类排在后面）
+    const categoryOrder = ['部位', '景别', '运镜', '方位', '情绪效果'];
+    function orderVocabulary(v) {
+      const out = {};
+      categoryOrder.forEach(k => { if (v[k]) out[k] = v[k]; });
+      Object.keys(v).forEach(k => { if (!out[k]) out[k] = v[k]; });
+      return out;
+    }
+
+    let vocabulary = loadVocabulary();
+    let historyStack = [];       // 存纯文本快照
+    let selectedOptions = new Set();
+    // 选区以「字符偏移量」记忆：勾选选项导致选区丢失也不影响标注位置
+    let savedOffsets = null; // { start, end }
+    let lastImportBase = ''; // 最近一次导入的文件名（去扩展名），用于导出命名
+
+    function loadVocabulary() {
+      try {
+        const saved = localStorage.getItem('sbw_vocabulary');
+        if (saved) return orderVocabulary(JSON.parse(saved));
+      } catch (e) {}
+      return orderVocabulary(JSON.parse(JSON.stringify(defaultVocab)));
+    }
+
+    function saveVocabulary() {
+      try {
+        localStorage.setItem('sbw_vocabulary', JSON.stringify(vocabulary));
+      } catch (e) {
+        flashStatus('⚠ 本地存储不可用，词汇仅本次有效——请用「⬇ 词库」导出备份', 'var(--warning)', 3000);
+      }
+    }
+
+    // =====================
+    // DOM 引用
+    // =====================
+    const editor = document.getElementById('editor');
+    const optionsPanel = document.querySelector('.options-panel');
+    const optionsContainer = document.getElementById('optionsContainer');
+    const statusText = document.getElementById('statusText');
+    const addVocabModal = document.getElementById('addVocabModal');
+    const vocabCategorySelect = document.getElementById('vocabCategory');
+    const newCategoryGroup = document.getElementById('newCategoryGroup');
+    const newCategoryInput = document.getElementById('newCategory');
+    const newVocabInput = document.getElementById('newVocab');
+    const editVocabModal = document.getElementById('editVocabModal');
+    const editVocabCategoryInput = document.getElementById('editVocabCategory');
+    const editVocabInput = document.getElementById('editVocabInput');
+    let editingVocab = null; // { category, oldValue }
+
+    // =====================
+    // 文本模型（核心）
+    // 编辑器内容 = 纯文本 + 【标注】span。
+    // 所有插入都用「字符串拼接 + 整体重渲染」完成，
+    // 物理上不存在删除原文的路径。
+    // =====================
+    function getEditorText() {
+      return editor.textContent;
+    }
+
+    // 由纯文本重建编辑器内容，【...】自动渲染为蓝色标注 span
+    function renderEditorText(text) {
+      editor.textContent = '';
+      const re = /【[^】]*】/g;
+      let last = 0;
+      let m;
+      while ((m = re.exec(text)) !== null) {
+        if (m.index > last) editor.appendChild(document.createTextNode(text.slice(last, m.index)));
+        const span = document.createElement('span');
+        span.className = 'tag';
+        span.textContent = m[0];
+        span.title = '点击可删除标注';
+        editor.appendChild(span);
+        last = m.index + m[0].length;
+      }
+      if (last < text.length) editor.appendChild(document.createTextNode(text.slice(last)));
+    }
+
+    // 把光标放到指定字符偏移处
+    function rangeAtOffset(offset) {
+      const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
+      let pos = 0;
+      let node;
+      while ((node = walker.nextNode())) {
+        const len = node.nodeValue.length;
+        if (offset <= pos + len) {
+          const r = document.createRange();
+          r.setStart(node, offset - pos);
+          r.collapse(true);
+          return r;
+        }
+        pos += len;
+      }
+      const r = document.createRange();
+      r.selectNodeContents(editor);
+      r.collapse(false);
+      return r;
+    }
+
+    function setCursorAtOffset(offset) {
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(rangeAtOffset(offset));
+    }
+
+    // =====================
+    // 选区偏移量：选中文本的瞬间记录位置
+    // =====================
+    function rangeInEditor(r) {
+      return r && editor.contains(r.commonAncestorContainer);
+    }
+
+    function captureOffsets() {
+      const sel = window.getSelection();
+      if (!sel.rangeCount) return;
+      const r = sel.getRangeAt(0);
+      if (!rangeInEditor(r)) return;
+      const pre = r.cloneRange();
+      pre.selectNodeContents(editor);
+      pre.setEnd(r.startContainer, r.startOffset);
+      const start = pre.toString().length;
+      savedOffsets = { start, end: start + r.toString().length };
+    }
+
+    document.addEventListener('selectionchange', captureOffsets);
+
+    // 选项面板按下鼠标时不抢占焦点
+    optionsPanel.addEventListener('mousedown', (e) => e.preventDefault());
+
+    // =====================
+    // 勾选项管理
+    // =====================
+    function clearCheckedOptions() {
+      selectedOptions.clear();
+      document.querySelectorAll('.option-item input[type="checkbox"]').forEach(cb => {
+        cb.checked = false;
+        cb.closest('.option-item').classList.remove('selected');
+      });
+      updateStatus();
+    }
+
+    // =====================
+    // 纯 JS ZIP 读写（docx / xlsx 均为 zip 容器）
+    // =====================
+    const crcTable = (() => {
+      const t = new Uint32Array(256);
+      for (let n = 0; n < 256; n++) {
+        let c = n;
+        for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+        t[n] = c >>> 0;
+      }
+      return t;
+    })();
+
+    function crc32(u8) {
+      let c = 0xFFFFFFFF;
+      for (let i = 0; i < u8.length; i++) c = crcTable[(c ^ u8[i]) & 0xFF] ^ (c >>> 8);
+      return (c ^ 0xFFFFFFFF) >>> 0;
+    }
+
+    // 打包 zip（stored 无压缩条目）
+    function buildZip(files) {
+      const enc = new TextEncoder();
+      const chunks = [];
+      const central = [];
+      let offset = 0;
+      for (const f of files) {
+        const nameBytes = enc.encode(f.name);
+        const crc = crc32(f.data);
+        const local = new DataView(new ArrayBuffer(30));
+        local.setUint32(0, 0x04034b50, true);
+        local.setUint16(4, 20, true);
+        local.setUint16(6, 0x0800, true); // UTF-8 文件名标志
+        local.setUint16(8, 0, true);
+        local.setUint16(10, 0, true);
+        local.setUint16(12, 0x21, true);
+        local.setUint32(14, crc, true);
+        local.setUint32(18, f.data.length, true);
+        local.setUint32(22, f.data.length, true);
+        local.setUint16(26, nameBytes.length, true);
+        local.setUint16(28, 0, true);
+        chunks.push(new Uint8Array(local.buffer), nameBytes, f.data);
+        central.push({ nameBytes, crc, size: f.data.length, offset });
+        offset += 30 + nameBytes.length + f.data.length;
+      }
+      const cdStart = offset;
+      for (const c of central) {
+        const cd = new DataView(new ArrayBuffer(46));
+        cd.setUint32(0, 0x02014b50, true);
+        cd.setUint16(4, 20, true);
+        cd.setUint16(6, 20, true);
+        cd.setUint16(8, 0x0800, true);
+        cd.setUint16(10, 0, true);
+        cd.setUint16(12, 0, true);
+        cd.setUint16(14, 0x21, true);
+        cd.setUint32(16, c.crc, true);
+        cd.setUint32(20, c.size, true);
+        cd.setUint32(24, c.size, true);
+        cd.setUint16(28, c.nameBytes.length, true);
+        cd.setUint32(42, c.offset, true);
+        chunks.push(new Uint8Array(cd.buffer), c.nameBytes);
+        offset += 46 + c.nameBytes.length;
+      }
+      const eocd = new DataView(new ArrayBuffer(22));
+      eocd.setUint32(0, 0x06054b50, true);
+      eocd.setUint16(8, central.length, true);
+      eocd.setUint16(10, central.length, true);
+      eocd.setUint32(12, offset - cdStart, true);
+      eocd.setUint32(16, cdStart, true);
+      chunks.push(new Uint8Array(eocd.buffer));
+      return new Blob(chunks);
+    }
+
+    // 解压 zip 全部条目，返回 { 文件名: Uint8Array }
+    async function unzipEntries(arrayBuffer) {
+      const u8 = new Uint8Array(arrayBuffer);
+      const dv = new DataView(arrayBuffer);
+      let eocd = -1;
+      for (let i = u8.length - 22; i >= 0; i--) {
+        if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+      }
+      if (eocd < 0) throw new Error('不是有效的 zip/docx/xlsx 文件');
+      const count = dv.getUint16(eocd + 10, true);
+      let p = dv.getUint32(eocd + 16, true);
+      const raw = [];
+      for (let i = 0; i < count; i++) {
+        if (p + 46 > u8.length || dv.getUint32(p, true) !== 0x02014b50) break;
+        const method = dv.getUint16(p + 10, true);
+        const compSize = dv.getUint32(p + 20, true);
+        const nameLen = dv.getUint16(p + 28, true);
+        const extraLen = dv.getUint16(p + 30, true);
+        const commentLen = dv.getUint16(p + 32, true);
+        const localOff = dv.getUint32(p + 42, true);
+        const name = new TextDecoder().decode(u8.subarray(p + 46, p + 46 + nameLen));
+        const lNameLen = dv.getUint16(localOff + 26, true);
+        const lExtraLen = dv.getUint16(localOff + 28, true);
+        const dataStart = localOff + 30 + lNameLen + lExtraLen;
+        raw.push({ name, method, data: u8.subarray(dataStart, dataStart + compSize) });
+        p += 46 + nameLen + extraLen + commentLen;
+      }
+      const out = {};
+      for (const e of raw) {
+        if (e.method === 0) {
+          out[e.name] = e.data;
+        } else if (e.method === 8) {
+          const ds = new DecompressionStream('deflate-raw');
+          const stream = new Blob([e.data]).stream().pipeThrough(ds);
+          out[e.name] = new Uint8Array(await new Response(stream).arrayBuffer());
+        }
+      }
+      return out;
+    }
+
+    function parseXml(u8) {
+      const xml = new TextDecoder().decode(u8);
+      return new DOMParser().parseFromString(xml, 'application/xml');
+    }
+
+    function nsAll(node, ns, tag) {
+      const found = node.getElementsByTagNameNS(ns, tag);
+      if (found.length) return found;
+      return node.getElementsByTagName(tag);
+    }
+
+    // docx → 纯文本（按段落）
+    function docxToText(u8) {
+      const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+      const doc = parseXml(u8);
+      const lines = [];
+      const paras = nsAll(doc, W, 'p');
+      for (const p of paras) {
+        let t = '';
+        const ts = nsAll(p, W, 't');
+        for (const node of ts) t += node.textContent;
+        lines.push(t);
+      }
+      return lines.join('\n');
+    }
+
+    // xlsx → 纯文本（行=换行，单元格=Tab）
+    function xlsxToText(files) {
+      const S = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+      const shared = [];
+      if (files['xl/sharedStrings.xml']) {
+        const sdoc = parseXml(files['xl/sharedStrings.xml']);
+        const sis = nsAll(sdoc, S, 'si');
+        for (const si of sis) shared.push(si.textContent);
+      }
+      const sheetName = Object.keys(files).find(n => /^xl\/worksheets\/sheet\d+\.xml$/.test(n));
+      if (!sheetName) throw new Error('xlsx 中找不到工作表');
+      const doc = parseXml(files[sheetName]);
+      const rows = [];
+      const rowNodes = nsAll(doc, S, 'row');
+      for (const row of rowNodes) {
+        const cells = [];
+        const cellNodes = nsAll(row, S, 'c');
+        for (const c of cellNodes) {
+          const t = c.getAttribute('t');
+          let val = '';
+          if (t === 'inlineStr') {
+            const ts = nsAll(c, S, 't');
+            for (const n of ts) val += n.textContent;
+          } else {
+            const v = nsAll(c, S, 'v')[0];
+            val = v ? v.textContent : '';
+            if (t === 's') val = shared[parseInt(val, 10)] || '';
+          }
+          cells.push(val);
+        }
+        rows.push(cells.join('\t'));
+      }
+      return rows.join('\n');
+    }
+
+    // =====================
+    // docx 生成
+    // =====================
+    const CONTENT_TYPES_XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+      '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+      '<Default Extension="xml" ContentType="application/xml"/>' +
+      '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>' +
+      '</Types>';
+
+    const RELS_XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+      '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>' +
+      '</Relationships>';
+
+    function buildDocxBlob(text) {
+      const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const body = text.split('\n')
+        .map(l => `<w:p><w:r><w:t xml:space="preserve">${esc(l)}</w:t></w:r></w:p>`)
+        .join('');
+      const documentXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+        '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">' +
+        '<w:body>' + body + '<w:sectPr/></w:body></w:document>';
+      const enc = new TextEncoder();
+      return buildZip([
+        { name: '[Content_Types].xml', data: enc.encode(CONTENT_TYPES_XML) },
+        { name: '_rels/.rels', data: enc.encode(RELS_XML) },
+        { name: 'word/document.xml', data: enc.encode(documentXml) }
+      ]);
+    }
+
+    // =====================
+    // 初始化选项面板
+    // =====================
+    function renderOptions() {
+      optionsContainer.innerHTML = '';
+      vocabCategorySelect.innerHTML = '<option value="_new">+ 新建分类</option>';
+
+      Object.entries(vocabulary).forEach(([category, items]) => {
+        const opt = document.createElement('option');
+        opt.value = category;
+        opt.textContent = category;
+        vocabCategorySelect.appendChild(opt);
+
+        const catDiv = document.createElement('div');
+        catDiv.className = 'category';
+        catDiv.dataset.category = category;
+
+        const header = document.createElement('div');
+        header.className = 'category-header';
+        header.innerHTML = `<span>${category} (${items.length})</span><span class="toggle-icon">▼</span>`;
+        header.addEventListener('click', () => catDiv.classList.toggle('collapsed'));
+
+        const itemsDiv = document.createElement('div');
+        itemsDiv.className = 'category-items';
+
+        items.forEach(item => {
+          const itemDiv = document.createElement('div');
+          itemDiv.className = 'option-item editable';
+          itemDiv.dataset.value = item;
+
+          const cb = document.createElement('input');
+          cb.type = 'checkbox';
+          cb.id = `opt-${category}-${item}`;
+          cb.checked = selectedOptions.has(item);
+          cb.addEventListener('change', (e) => {
+            if (e.target.checked) selectedOptions.add(item);
+            else selectedOptions.delete(item);
+            itemDiv.classList.toggle('selected', e.target.checked);
+            updateStatus();
+          });
+
+          const label = document.createElement('label');
+          label.htmlFor = cb.id;
+          label.textContent = item;
+          label.addEventListener('click', (e) => {
+            e.preventDefault();
+            cb.checked = !cb.checked;
+            cb.dispatchEvent(new Event('change'));
+          });
+
+          // 双击词汇名称进入编辑；单击仍保持原有勾选逻辑。
+          itemDiv.addEventListener('dblclick', (e) => {
+            if (e.target.matches('input[type="checkbox"]')) return;
+            e.preventDefault();
+            e.stopPropagation();
+            showEditVocabModal(category, item);
+          });
+
+          itemDiv.appendChild(cb);
+          itemDiv.appendChild(label);
+          itemsDiv.appendChild(itemDiv);
+        });
+
+        catDiv.appendChild(header);
+        catDiv.appendChild(itemsDiv);
+        optionsContainer.appendChild(catDiv);
+      });
+    }
+
+    // =====================
+    // 状态栏更新
+    // =====================
+    function updateStatus() {
+      if (selectedOptions.size === 0) {
+        statusText.textContent = '就绪 — 选中文本或单击定位，再勾选右侧选项';
+        statusText.style.color = 'var(--text-muted)';
+      } else {
+        const opts = Array.from(selectedOptions).join('，');
+        statusText.textContent = `已选 ${selectedOptions.size} 项：${opts} — 按 Enter 标注`;
+        statusText.style.color = 'var(--accent)';
+      }
+    }
+
+    function flashStatus(msg, color, ms = 1800) {
+      statusText.textContent = msg;
+      statusText.style.color = color;
+      setTimeout(updateStatus, ms);
+    }
+
+    // =====================
+    // 保存历史（用于撤销）：存纯文本快照
+    // =====================
+    function pushHistory() {
+      historyStack.push(getEditorText());
+      if (historyStack.length > 50) historyStack.shift();
+    }
+
+    function undo() {
+      if (historyStack.length === 0) {
+        flashStatus('没有可撤销的操作', 'var(--warning)');
+        return;
+      }
+      const text = historyStack.pop();
+      renderEditorText(text);
+      savedOffsets = null;
+      flashStatus('已撤销', 'var(--success)');
+    }
+
+    // =====================
+    // 应用标注（字符串拼接：只插入，绝不删除原文）
+    // 例：选中"小满" + 勾选"近景" + Enter
+    //     "小满在吃饭" → "【近景】小满在吃饭"
+    // =====================
+    function applyTags() {
+      if (selectedOptions.size === 0) {
+        flashStatus('请先勾选右侧选项', 'var(--warning)');
+        return;
+      }
+
+      captureOffsets(); // 优先用当前选区，其次用记忆的偏移量
+      if (!savedOffsets) {
+        flashStatus('请先在文本区选中文本或单击定位', 'var(--warning)');
+        return;
+      }
+
+      pushHistory();
+
+      const tags = Array.from(selectedOptions).join('，');
+      const insert = `【${tags}】`;
+      const at = Math.min(savedOffsets.start, getEditorText().length);
+      const text = getEditorText();
+      renderEditorText(text.slice(0, at) + insert + text.slice(at));
+      setCursorAtOffset(at + insert.length);
+
+      savedOffsets = null;
+
+      // 标注完成后自动清空勾选，直接开始下一次标注
+      clearCheckedOptions();
+
+      flashStatus(`已标注：${tags}（原文未改动，勾选已清空）`, 'var(--success)');
+    }
+
+    // 未勾选项时 Enter = 插入普通换行（拦截浏览器默认行为，保持文本模型一致）
+    function insertPlainNewline() {
+      captureOffsets();
+      const text = getEditorText();
+      const start = savedOffsets ? savedOffsets.start : text.length;
+      const end = savedOffsets ? savedOffsets.end : start;
+      renderEditorText(text.slice(0, start) + '\n' + text.slice(end));
+      setCursorAtOffset(start + 1);
+      savedOffsets = null;
+    }
+
+    // =====================
+    // 添加词汇
+    // =====================
+    function showAddVocabModal() {
+      addVocabModal.classList.add('active');
+      newVocabInput.value = '';
+      newCategoryInput.value = '';
+      vocabCategorySelect.value = '_new';
+      newCategoryGroup.style.display = 'block';
+      newVocabInput.focus();
+    }
+
+    function hideAddVocabModal() {
+      addVocabModal.classList.remove('active');
+    }
+
+    function confirmAddVocab() {
+      let category = vocabCategorySelect.value;
+      if (category === '_new') {
+        category = newCategoryInput.value.trim();
+        if (!category) {
+          alert('请输入新分类名称');
+          return;
+        }
+      }
+
+      const words = newVocabInput.value
+        .split(/[,，\n]+/)
+        .map(s => s.trim())
+        .filter(s => s);
+
+      if (words.length === 0) {
+        alert('请输入至少一个词汇');
+        return;
+      }
+
+      if (!vocabulary[category]) vocabulary[category] = [];
+      vocabulary[category].push(...words);
+      vocabulary[category] = [...new Set(vocabulary[category])];
+      vocabulary = orderVocabulary(vocabulary);
+      saveVocabulary();
+      renderOptions();
+      hideAddVocabModal();
+
+      flashStatus(`已添加 ${words.length} 个词汇到「${category}」`, 'var(--success)', 2000);
+    }
+
+    // =====================
+    // 双击编辑词汇
+    // =====================
+    function showEditVocabModal(category, oldValue) {
+      editingVocab = { category, oldValue };
+      editVocabCategoryInput.value = category;
+      editVocabInput.value = oldValue;
+      editVocabModal.classList.add('active');
+      requestAnimationFrame(() => {
+        editVocabInput.focus();
+        editVocabInput.select();
+      });
+    }
+
+    function hideEditVocabModal() {
+      editVocabModal.classList.remove('active');
+      editingVocab = null;
+    }
+
+    function confirmEditVocab() {
+      if (!editingVocab) return;
+
+      const { category, oldValue } = editingVocab;
+      const newValue = editVocabInput.value.trim();
+
+      if (!newValue) {
+        alert('词汇不能为空');
+        editVocabInput.focus();
+        return;
+      }
+
+      if (!vocabulary[category]) {
+        hideEditVocabModal();
+        return;
+      }
+
+      // 不允许把词改成同分类中已经存在的另一个词，避免出现重复选项。
+      const duplicate = vocabulary[category].some(
+        item => item !== oldValue && item === newValue
+      );
+      if (duplicate) {
+        alert(`「${newValue}」已经存在于「${category}」分类中`);
+        editVocabInput.focus();
+        editVocabInput.select();
+        return;
+      }
+
+      const index = vocabulary[category].indexOf(oldValue);
+      if (index < 0) {
+        hideEditVocabModal();
+        return;
+      }
+
+      vocabulary[category][index] = newValue;
+
+      // 如果旧词当前处于勾选状态，同步迁移到新词。
+      if (selectedOptions.has(oldValue)) {
+        selectedOptions.delete(oldValue);
+        selectedOptions.add(newValue);
+      }
+
+      vocabulary[category] = [...new Set(vocabulary[category])];
+      vocabulary = orderVocabulary(vocabulary);
+      saveVocabulary();
+      renderOptions();
+      hideEditVocabModal();
+
+      flashStatus(`已将「${oldValue}」修改为「${newValue}」`, 'var(--success)', 2200);
+    }
+
+    // =====================
+    // 导入 / 导出
+    // =====================
+    function importText(text, source) {
+      pushHistory();
+      renderEditorText(text);
+      savedOffsets = null;
+      flashStatus(`已导入${source ? '：' + source : ''}`, 'var(--success)');
+    }
+
+    async function handleImportFile(file) {
+      const name = file.name.toLowerCase();
+      lastImportBase = file.name.replace(/\.[^.]+$/, ''); // 记录原文件名（去扩展名）
+      if (name.endsWith('.docx')) {
+        const files = await unzipEntries(await file.arrayBuffer());
+        if (!files['word/document.xml']) throw new Error('docx 中找不到正文内容');
+        importText(docxToText(files['word/document.xml']), file.name);
+      } else if (name.endsWith('.xlsx')) {
+        const files = await unzipEntries(await file.arrayBuffer());
+        importText(xlsxToText(files), file.name);
+      } else {
+        const text = await file.text();
+        importText(text, file.name);
+      }
+    }
+
+    // =====================
+    // 词库备份：导出 / 导入（JSON，与现有词库合并）
+    // 升级版本、更换设备或换浏览器后，导入备份即可恢复全部自定义词汇
+    // =====================
+    function exportVocab() {
+      const blob = new Blob([JSON.stringify(vocabulary, null, 2)], { type: 'application/json;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = '剧本标注词库.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      flashStatus('词库已导出备份（剧本标注词库.json）', 'var(--success)');
+    }
+
+    async function importVocabFile(file) {
+      let data;
+      try {
+        data = JSON.parse(await file.text());
+      } catch (e) {
+        throw new Error('不是有效的词库 JSON 文件');
+      }
+      if (!data || typeof data !== 'object' || Array.isArray(data)) {
+        throw new Error('词库文件格式不正确');
+      }
+      let added = 0;
+      Object.entries(data).forEach(([cat, words]) => {
+        if (!Array.isArray(words)) return;
+        if (!vocabulary[cat]) vocabulary[cat] = [];
+        const before = vocabulary[cat].length;
+        vocabulary[cat] = [...new Set([...vocabulary[cat], ...words.map(w => String(w).trim()).filter(Boolean)])];
+        added += vocabulary[cat].length - before;
+      });
+      vocabulary = orderVocabulary(vocabulary);
+      saveVocabulary();
+      renderOptions();
+      flashStatus(`词库已导入并合并（新增 ${added} 个词汇）`, 'var(--success)', 2500);
+    }
+
+    function exportDocx() {
+      const text = getEditorText();
+      const blob = buildDocxBlob(text);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `剧本标注${lastImportBase}.docx`;
+      a.click();
+      URL.revokeObjectURL(url);
+      flashStatus(`已导出：剧本标注${lastImportBase}.docx`, 'var(--success)');
+    }
+
+    // =====================
+    // 事件绑定
+    // =====================
+    document.getElementById('undoBtn').addEventListener('click', undo);
+    document.getElementById('addVocabBtn').addEventListener('click', showAddVocabModal);
+    document.getElementById('exportVocabBtn').addEventListener('click', exportVocab);
+    document.getElementById('importVocabBtn').addEventListener('click', () => {
+      document.getElementById('vocabFileInput').click();
+    });
+    document.getElementById('vocabFileInput').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      e.target.value = '';
+      if (!file) return;
+      try {
+        await importVocabFile(file);
+      } catch (err) {
+        flashStatus('词库导入失败：' + (err && err.message ? err.message : '未知错误'), 'var(--danger)', 2500);
+      }
+    });
+    document.getElementById('cancelAddBtn').addEventListener('click', hideAddVocabModal);
+    document.getElementById('confirmAddBtn').addEventListener('click', confirmAddVocab);
+    document.getElementById('clearSelectionBtn').addEventListener('click', clearCheckedOptions);
+    document.getElementById('exportBtn').addEventListener('click', exportDocx);
+
+    document.getElementById('importBtn').addEventListener('click', () => {
+      document.getElementById('fileInput').click();
+    });
+
+    document.getElementById('fileInput').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      e.target.value = '';
+      if (!file) return;
+      try {
+        await handleImportFile(file);
+      } catch (err) {
+        flashStatus('导入失败：' + (err && err.message ? err.message : '未知错误'), 'var(--danger)', 2500);
+      }
+    });
+
+    vocabCategorySelect.addEventListener('change', () => {
+      newCategoryGroup.style.display = vocabCategorySelect.value === '_new' ? 'block' : 'none';
+    });
+
+    // 键盘快捷键
+    document.addEventListener('keydown', (e) => {
+      if (addVocabModal.classList.contains('active')) return; // 弹窗打开时不拦截
+      if (e.isComposing) return; // 输入法组词期间不拦截
+
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      }
+      // 焦点不在编辑器时（如勾选完选项）按 Enter 也能应用标注
+      if (e.key === 'Enter' && !e.shiftKey && document.activeElement !== editor) {
+        e.preventDefault();
+        applyTags();
+      }
+      if (e.key === 'Escape') {
+        clearCheckedOptions();
+      }
+    });
+
+    // 编辑器内 Enter 全程拦截：
+    // 勾选了选项 → 应用标注；未勾选 → 插入普通换行。
+    // 浏览器默认的「删除选中文字再换行」行为永远不会发生。
+    editor.addEventListener('keydown', (e) => {
+      if (e.isComposing) return;
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (selectedOptions.size > 0) applyTags();
+        else insertPlainNewline();
+      }
+    });
+
+    // 保险：即使 keydown 漏拦，也在浏览器真正改动 DOM 前拦下换行
+    editor.addEventListener('beforeinput', (e) => {
+      if (e.inputType === 'insertParagraph' || e.inputType === 'insertLineBreak') {
+        e.preventDefault();
+        if (selectedOptions.size > 0) applyTags();
+        else insertPlainNewline();
+      }
+    });
+
+    // 粘贴一律按纯文本处理，保持文本模型一致
+    editor.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+      if (!text) return;
+      captureOffsets();
+      const cur = getEditorText();
+      const start = savedOffsets ? savedOffsets.start : cur.length;
+      const end = savedOffsets ? savedOffsets.end : start;
+      pushHistory();
+      renderEditorText(cur.slice(0, start) + text + cur.slice(end));
+      setCursorAtOffset(start + text.length);
+      savedOffsets = null;
+    });
+
+    // 点击标注标签时可删除（只移除标注本身，不动其他文字）
+    editor.addEventListener('click', (e) => {
+      if (e.target.classList.contains('tag')) {
+        if (confirm('要删除这个标注吗？')) {
+          pushHistory();
+          const text = getEditorText();
+          const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
+          let pos = 0;
+          let node;
+          let at = -1;
+          while ((node = walker.nextNode())) {
+            if (node.parentNode === e.target) { at = pos; break; }
+            pos += node.nodeValue.length;
+          }
+          if (at >= 0) {
+            renderEditorText(text.slice(0, at) + text.slice(at + e.target.textContent.length));
+          } else {
+            e.target.remove();
+          }
+          savedOffsets = null;
+          flashStatus('已删除标注', 'var(--success)');
+        }
+      }
+    });
+
+    // 模态框外部点击关闭
+    addVocabModal.addEventListener('click', (e) => {
+      if (e.target === addVocabModal) hideAddVocabModal();
+    });
+
+    // 修改词汇弹窗
+    editVocabModal.addEventListener('click', (e) => {
+      if (e.target === editVocabModal) hideEditVocabModal();
+    });
+
+    editVocabModal.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        confirmEditVocab();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        hideEditVocabModal();
+      }
+    });
+
+    document.getElementById('cancelEditBtn').addEventListener('click', hideEditVocabModal);
+    document.getElementById('confirmEditBtn').addEventListener('click', confirmEditVocab);
+
+
+    // 模态框内按 Enter 直接确认添加
+    addVocabModal.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        confirmAddVocab();
+      }
+    });
+
+    // =====================
+    // AI导演深化：把当前剧本一次性翻译成影视执行层
+    // =====================
+    const aiDirectorModal = document.getElementById('aiDirectorModal');
+    const aiDirectorScript = document.getElementById('aiDirectorScript');
+    const aiDirectorProvider = document.getElementById('aiDirectorProvider');
+    const aiDirectorStatus = document.getElementById('aiDirectorStatus');
+    function buildDirectorTask(script) {
+      return `你是资深影视导演、分镜导演和AI视频生成导演。\n\n我先写了一个粗剧本，你不要让我逐项选择景别、构图、机位、焦段、运镜、动作或表演。请直接替我完成导演层面的翻译。用户已经明确写出的特殊景别/运镜/情绪必须优先保留；没有写的部分，你按成熟电影/电视剧的常用拍法自行判断。\n\n【原始剧本】\n${script}\n\n【请按同一镜头逐层输出】\n1. 镜头目的：这一镜真正要让观众感受到什么。\n2. 景别与机位：自行决定，说明主体在画面中的位置与前后景关系。\n3. 构图：说明人物/道具/环境如何排布，避免空泛的“高级感”。\n4. 运镜：说明从哪里开始、如何移动、为什么这样动；没有必要就不要乱加炫技运镜。\n5. 动作与表演：把动作写成连续可执行的时间过程；写清关键微动作、视线、身体重心和情绪变化。\n6. 环境动态：补1～3个自然背景动作，但不能抢主体。\n7. 连贯性约束：人物/动物结构、道具位置、动作方向、前后状态必须前后一致。\n8. LibTV最终Prompt：把以上最必要信息压缩成一段可以直接使用的中文Prompt，具体、短、准，不堆“电影感/大片感/8K”等空词。\n\n最终目标不是把文字写长，而是把“我写的剧本”直接变成“可以拍、可以生成、可以交给LibTV”的镜头。`;
+    }
+
+    function openAiDirectorModal() {
+      const text = getEditorText().trim();
+      aiDirectorScript.value = text && text !== '在此粘贴或输入剧本...' ? text : '';
+      aiDirectorStatus.textContent = aiDirectorScript.value ? '已读取当前剧本。' : '先写一点剧本，AI会负责把后面的影视步骤补齐。';
+      aiDirectorModal.classList.add('active');
+      setTimeout(() => aiDirectorScript.focus(), 30);
+    }
+    function closeAiDirectorModal(){ aiDirectorModal.classList.remove('active'); }
+    document.getElementById('aiDeepenBtn').addEventListener('click', openAiDirectorModal);
+    document.getElementById('aiDirectorCancel').addEventListener('click', closeAiDirectorModal);
+    aiDirectorModal.addEventListener('click', (e)=>{ if(e.target===aiDirectorModal) closeAiDirectorModal(); });
+    document.getElementById('aiDirectorCopy').addEventListener('click', async ()=>{
+      const script=aiDirectorScript.value.trim();
+      if(!script){ aiDirectorStatus.textContent='还没有剧本内容。'; return; }
+      const task=buildDirectorTask(script);
+      if(window.Handoff && Handoff.copyText){ await Handoff.copyText(task); aiDirectorStatus.textContent='已复制。'; }
+      else { navigator.clipboard.writeText(task).then(()=>aiDirectorStatus.textContent='已复制。').catch(()=>aiDirectorStatus.textContent='复制失败，请手动复制。'); }
+    });
+    document.getElementById('aiDirectorSend').addEventListener('click', async ()=>{
+      const script=aiDirectorScript.value.trim();
+      const provider=aiDirectorProvider.value;
+      if(!script){ aiDirectorStatus.textContent='还没有剧本内容。'; return; }
+      const task=buildDirectorTask(script);
+      aiDirectorStatus.textContent='正在打开 '+provider+'…';
+      try{
+        if(window.Handoff && Handoff.sendToChat){
+          const r=await Handoff.sendToChat(provider, task);
+          aiDirectorStatus.textContent=r.message||'已打开 AI。';
+        } else { await navigator.clipboard.writeText(task); aiDirectorStatus.textContent='已复制任务，请打开对应 AI 粘贴。'; }
+      }catch(err){
+        try{ await navigator.clipboard.writeText(task); }catch(e){}
+        aiDirectorStatus.textContent='网页交接失败，任务已复制到剪贴板。';
+      }
+    });
+
+    // =====================
+    // 初始化
+    // =====================
+    renderOptions();
+    updateStatus();
+
+    renderEditorText('在此粘贴或输入剧本...\n\n例如：\n镜头慢慢推近，诗雨走向大咪，\n大咪舒服的微微抬头咪眼打呼噜。');
+  </script>
+</body>
+</html>

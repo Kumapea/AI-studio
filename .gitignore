@@ -1,0 +1,8 @@
+.DS_Store
+.idea/
+*.iml
+android-app/.gradle/
+android-app/build/
+android-app/app/build/
+ios/**/build/
+ios/**/*.xcodeproj/xcuserdata/
