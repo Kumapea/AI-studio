@@ -1,3 +1,15 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"><script>try{var t=localStorage.getItem('studio:theme');document.documentElement.setAttribute('data-theme',t==='dark'?'dark':'light')}catch(e){}</script><meta name="viewport" content="width=device-width,initial-scale=1"><title>AI制片台</title><link rel="stylesheet" href="css/style.css"><style>
-.home-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.home-card{padding:20px;text-align:left;border:1px solid var(--line);background:var(--bg-card);border-radius:10px;cursor:pointer}.home-card b{display:block;font-size:16px;margin-bottom:7px;color:var(--text-primary)}.home-card span{font-size:13px;color:var(--text-secondary);line-height:1.6}.ai-row{display:flex;align-items:center;gap:12px}.ai-select{padding:9px 12px;border:1px solid var(--line);border-radius:7px;background:var(--bg-card);color:var(--text-primary)}.ai-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.ai-actions .btn{font-size:12px;padding:8px 12px}.video-preview{width:100%;max-height:330px;margin-top:10px;border-radius:8px;background:#000}.field-note{color:var(--text-muted);font-size:12px}.output-block{border:1px solid var(--line);background:var(--bg-card);padding:16px;border-radius:9px;margin-top:12px}.out-head{display:flex;justify-content:space-between;gap:12px;align-items:center}.out-head h4{margin:0}.output-block pre{white-space:pre-wrap;word-break:break-word;max-height:320px;overflow:auto;font:12px/1.6 var(--font-mono);background:var(--bg-sunken);padding:12px;border-radius:7px}.view{display:none}.view.active{display:block}.nav-item .n-icon{font-size:18px}.nav-item{min-width:0}.nav-item .n-title{white-space:nowrap}@media(max-width:760px){.home-grid{grid-template-columns:1fr}.ai-actions .btn{flex:1}}
-</style></head><body><div id="shell"><div id="topbar"><div><div class="tb-title" id="topbar-title">首页</div><div class="tb-sub">视频 → 数据 → AI判断 → 下一步行动</div></div><button class="theme-toggle" id="theme-toggle" title="切换浅色/深色"></button></div><main id="main"></main><nav id="module-nav"></nav></div><script src="js/db.js"></script><script src="js/theme.js"></script><script src="js/handoff.js"></script><script src="js/vendor/pptxgen.min.js"></script><script src="js/studio-v3.js"></script></body></html>
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI制片台｜剧本标注</title>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;color:#eee;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+#frame{width:100%;height:100%;border:0;display:block;background:#fff}
+</style>
+</head>
+<body>
+<iframe id="frame" src="modules/script-tagging/index.html" title="剧本标注工作台"></iframe>
+</body>
+</html>
