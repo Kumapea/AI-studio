@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "AI制片台｜剧本标注与AI导演",
-  "version": "4.1.0",
-  "description": "AI制片台：剧本 → 场景语境 → AI导演标注 → LibTV Prompt。用户负责说人话，AI负责懂影视。无需 API Key。",
+  "version": "4.2.0",
+  "description": "AI制片台：提示词 + 剧本标注。场景语境驱动 AI 影视深化；支持 DeepSeek / Kimi / GPT / Gemini 网页交接，无需 API Key。",
   "icons": {
     "16": "icons/icon-16.png",
     "32": "icons/icon-32.png",

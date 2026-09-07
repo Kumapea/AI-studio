@@ -447,7 +447,7 @@
         <button class="btn" id="exportVocabBtn" title="导出词库备份（.json），升级/换设备后导入即可恢复">⬇ 词库</button>
         <button class="btn" id="importVocabBtn" title="导入词库备份（.json），与现有词库合并">⬆ 词库</button>
         <button class="btn" id="importBtn" title="导入 .txt / .md / .docx / .xlsx">📂 导入</button>
-        <button class="btn" id="aiDeepenBtn" title="把当前剧本交给 AI 自动完成构图、景别、运镜、动作和 LibTV 提示词">✦ AI导演深化</button>
+        <button class="btn" id="aiDeepenBtn" title="把当前剧本交给 AI 自动完成构图、景别、运镜、动作和 LibTV 提示词">✦ AI深化</button>
         <button class="btn primary" id="exportBtn" title="导出为 Word (.docx) 文档">💾 导出 docx</button>
       </div>
     </header>
@@ -535,16 +535,13 @@
   <!-- AI Director Modal -->
   <div class="modal-overlay" id="aiDirectorModal">
     <div class="modal" style="width:760px;max-width:95vw">
-      <h3>✦ AI导演深化</h3>
-      <p style="color:var(--text-muted);font-size:12px;margin:-6px 0 14px">你只负责说人话。AI 根据“场景语境 + 原始剧本 + 已有标注”完成景别、构图、机位、运镜、动作/表演与 LibTV Prompt。场景语境优先级最高，禁止把明确场景擅自换成别的地方。</p>
+      <h3>✦ AI深化</h3>
+      <p style="color:var(--text-muted);font-size:12px;margin:-6px 0 14px">当前剧本会自动带入。你只需要补场景语境，然后点生成。</p>
       <div class="form-group">
         <label>场景语境（硬约束）</label>
         <textarea id="aiDirectorContext" rows="4" placeholder="时间、地点、人物所在位置、空间关系、关键道具、世界观设定……"></textarea>
       </div>
-      <div class="form-group">
-        <label>当前剧本</label>
-        <textarea id="aiDirectorScript" rows="8" style="width:100%;padding:10px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;resize:vertical"></textarea>
-      </div>
+      
       <div class="modal-actions" style="justify-content:flex-start;flex-wrap:wrap">
         <button class="btn primary" id="aiDirectorBuild">生成导演任务</button>
         <button class="btn" id="aiDirectorCancel">关闭</button>
@@ -1450,8 +1447,7 @@
     // AI导演深化：场景语境 + 剧本 → 导演任务 → 一键交给网页 AI
     // =====================
     const aiDirectorModal = document.getElementById('aiDirectorModal');
-    const aiDirectorScript = document.getElementById('aiDirectorScript');
-    const aiDirectorContext = document.getElementById('aiDirectorContext');
+        const aiDirectorContext = document.getElementById('aiDirectorContext');
     const aiDirectorStatus = document.getElementById('aiDirectorStatus');
     const aiDirectorTaskWrap = document.getElementById('aiDirectorTaskWrap');
     const aiDirectorTaskEl = document.getElementById('aiDirectorTask');
@@ -1499,8 +1495,7 @@ ${script}
 
     function openAiDirectorModal() {
       const text = getEditorText().trim();
-      aiDirectorScript.value = text && text !== '在此粘贴或输入剧本...' ? text : '';
-      try { aiDirectorContext.value = localStorage.getItem('sbw_scene_context') || aiDirectorContext.value || ''; } catch(e) {}
+            try { aiDirectorContext.value = localStorage.getItem('sbw_scene_context') || aiDirectorContext.value || ''; } catch(e) {}
       aiDirectorTaskWrap.style.display = 'none';
       aiDirectorTaskEl.textContent = '';
       lastDirectorTask = '';
@@ -1514,7 +1509,7 @@ ${script}
     aiDirectorModal.addEventListener('click', (e)=>{ if(e.target===aiDirectorModal) closeAiDirectorModal(); });
 
     document.getElementById('aiDirectorBuild').addEventListener('click', ()=>{
-      const script=aiDirectorScript.value.trim();
+      const script=getEditorText().trim();
       const context=aiDirectorContext.value.trim();
       if(!script){ aiDirectorStatus.textContent='还没有剧本内容。'; return; }
       lastDirectorTask=buildDirectorTask(script, context);
