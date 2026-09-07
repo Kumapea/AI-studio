@@ -1,9 +1,20 @@
-# AI制片台 V4.1
+# AI制片台
 
-## Chrome
-Chrome 扩展聚焦生产：**剧本标注 → 场景语境 → AI导演深化 → LibTV Prompt**。
+AI制片台 V3：AI导演 + 视频分析 + 爆款拆解 + 我的传播诊断。
 
-## Android
-Android 独立负责内容研究：研究视频、研究库、深入拉片、历史记录与创作雷达。
+## 平台
 
-两个产品功能分开，未来可共享知识库，但不在 Chrome 里重复做视频研究。
+- `browser-extension/`：Chrome MV3 扩展
+- `android-app/`：Android App，包含悬浮 AI 按钮与分享入口
+- `.github/workflows/`：GitHub Actions 自动构建 Chrome 扩展和 Android APK
+
+## GitHub Actions
+
+1. **Build Chrome Extension** → Chrome ZIP
+2. **Build Android APK** → `app-debug.apk`
+
+Android debug APK 可以直接安装到 Android 手机（首次可能需要允许安装未知来源应用）。
+
+## AI 网页交接
+
+核心功能默认不要求 API Key，任务交给 DeepSeek / Kimi / GPT / Gemini 网页端完成。Chrome 扩展已配置对应站点的自动填入入口。

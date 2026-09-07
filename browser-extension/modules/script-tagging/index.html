@@ -297,24 +297,6 @@
       color: var(--accent);
     }
 
-    .scene-context {
-      padding: 10px 16px 12px;
-      background: #fafafd;
-      border-bottom: 1px solid var(--paper-border);
-    }
-    .scene-context-head {
-      display: flex; align-items: baseline; gap: 10px; margin-bottom: 7px;
-      color: var(--paper-ink);
-    }
-    .scene-context-head b { font-size: 13px; }
-    .scene-context-head span { font-size: 11px; color: var(--paper-muted); }
-    #sceneContext {
-      width: 100%; min-height: 58px; max-height: 130px; resize: vertical;
-      padding: 8px 10px; border: 1px solid var(--paper-border); border-radius: 7px;
-      background: #fff; color: var(--paper-ink); outline: none; font: 12px/1.6 var(--font);
-    }
-    #sceneContext:focus { border-color: var(--paper-accent); }
-
     /* ===== Footer ===== */
     footer {
       padding: 8px 20px;
@@ -440,14 +422,13 @@
 <body>
   <div class="app">
     <header>
-      <h1>🎬 剧本标注工作台 <span style="font-size:11px;color:var(--text-muted);font-weight:400">剧本 → 导演 → LibTV</span></h1>
+      <h1>🎬 剧本标注工作台</h1>
       <div class="toolbar">
         <button class="btn" id="undoBtn" title="撤销上次标注 (Ctrl+Z)">↩ 撤销</button>
         <button class="btn" id="addVocabBtn" title="添加新词汇到词库">+ 添加词汇</button>
         <button class="btn" id="exportVocabBtn" title="导出词库备份（.json），升级/换设备后导入即可恢复">⬇ 词库</button>
         <button class="btn" id="importVocabBtn" title="导入词库备份（.json），与现有词库合并">⬆ 词库</button>
         <button class="btn" id="importBtn" title="导入 .txt / .md / .docx / .xlsx">📂 导入</button>
-        <button class="btn" id="aiDeepenBtn" title="把当前剧本交给 AI 自动完成构图、景别、运镜、动作和 LibTV 提示词">✦ AI深化</button>
         <button class="btn primary" id="exportBtn" title="导出为 Word (.docx) 文档">💾 导出 docx</button>
       </div>
     </header>
@@ -456,11 +437,7 @@
       <section class="text-panel">
         <div class="text-toolbar">
           <span>📝 剧本·脚本文本区</span>
-          <span class="hint">先说人话；特殊景别/运镜你写了就保留，其他交给 AI</span>
-        </div>
-        <div class="scene-context">
-          <div class="scene-context-head"><b>🎬 场景语境</b><span>这里是硬约束，AI 后续所有镜头设计都必须围绕它展开</span></div>
-          <textarea id="sceneContext" placeholder="例如：国庆当天上午，高铁车内。国庆在主驾驶位，车厢正在行驶，人物保持这个空间关系。时间、地点、人物位置、道具和特殊设定都可以写在这里。"></textarea>
+          <span class="hint">选中文本 → 右侧勾选 → 按 Enter 标注；双击右侧词汇可编辑</span>
         </div>
         <div id="editor" contenteditable="true" spellcheck="false"></div>
       </section>
@@ -532,41 +509,11 @@
     </div>
   </div>
 
-  <!-- AI Director Modal -->
-  <div class="modal-overlay" id="aiDirectorModal">
-    <div class="modal" style="width:760px;max-width:95vw">
-      <h3>✦ AI深化</h3>
-      <p style="color:var(--text-muted);font-size:12px;margin:-6px 0 14px">当前剧本会自动带入。你只需要补场景语境，然后点生成。</p>
-      <div class="form-group">
-        <label>场景语境（硬约束）</label>
-        <textarea id="aiDirectorContext" rows="4" placeholder="时间、地点、人物所在位置、空间关系、关键道具、世界观设定……"></textarea>
-      </div>
-      
-      <div class="modal-actions" style="justify-content:flex-start;flex-wrap:wrap">
-        <button class="btn primary" id="aiDirectorBuild">生成导演任务</button>
-        <button class="btn" id="aiDirectorCancel">关闭</button>
-      </div>
-      <div id="aiDirectorTaskWrap" style="display:none;margin-top:14px">
-        <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">任务已生成。点击下面的 AI，会打开对应网页并自动填入；你只需要最后检查并点击发送。</div>
-        <div class="ai-actions" id="aiDirectorProviders">
-          <button class="btn primary" data-provider="deepseek">DeepSeek</button>
-          <button class="btn primary" data-provider="kimi">Kimi</button>
-          <button class="btn primary" data-provider="gpt">GPT</button>
-          <button class="btn primary" data-provider="gemini">Gemini</button>
-          <button class="btn" id="aiDirectorCopy">复制任务</button>
-        </div>
-        <details style="margin-top:10px"><summary style="cursor:pointer;color:var(--text-muted);font-size:12px">查看完整导演任务</summary><pre id="aiDirectorTask" style="white-space:pre-wrap;word-break:break-word;max-height:300px;overflow:auto;background:var(--bg);padding:12px;border-radius:6px;font-size:11px;line-height:1.6;margin-top:8px"></pre></details>
-      </div>
-      <div id="aiDirectorStatus" style="margin-top:10px;color:var(--text-muted);font-size:12px;line-height:1.5"></div>
-    </div>
-  </div>
-
   <!-- Hidden file input for import -->
   <input type="file" id="fileInput" accept=".txt,.md,.docx,.xlsx" style="display:none;">
   <!-- Hidden file input for vocabulary import -->
   <input type="file" id="vocabFileInput" accept=".json" style="display:none;">
 
-  <script src="../../js/handoff.js"></script>
   <script>
     // =====================
     // 词汇库（默认 + 用户扩展）
@@ -1441,107 +1388,6 @@
         e.preventDefault();
         confirmAddVocab();
       }
-    });
-
-    // =====================
-    // AI导演深化：场景语境 + 剧本 → 导演任务 → 一键交给网页 AI
-    // =====================
-    const aiDirectorModal = document.getElementById('aiDirectorModal');
-        const aiDirectorContext = document.getElementById('aiDirectorContext');
-    const aiDirectorStatus = document.getElementById('aiDirectorStatus');
-    const aiDirectorTaskWrap = document.getElementById('aiDirectorTaskWrap');
-    const aiDirectorTaskEl = document.getElementById('aiDirectorTask');
-    let lastDirectorTask = '';
-
-    try { aiDirectorContext.value = localStorage.getItem('sbw_scene_context') || ''; } catch(e) {}
-    aiDirectorContext.addEventListener('input', () => { try { localStorage.setItem('sbw_scene_context', aiDirectorContext.value); } catch(e) {} });
-
-    function buildDirectorTask(script, context) {
-      return `你是资深影视导演、分镜导演和 AI 视频生成导演。
-
-你的工作不是让我填写一堆影视参数，而是把我写的“大白话剧本”直接翻译成可以执行、可以生成的镜头。
-
-【最高优先级：场景语境硬约束】
-${context || '未额外提供；请以原始剧本明确写出的地点、时间、人物位置、空间关系和道具为准。'}
-
-严格规则：
-- 场景语境是硬约束。除非原始剧本明确写出场景变化，否则不得擅自改变地点、时间、空间关系、人物所在位置或关键道具。
-- 原始剧本里已经写出的景别、机位、运镜、视角、动作、情绪等特殊要求必须优先保留；不要为了“专业”而覆盖它们。
-- 如果剧本写“车内主驾驶位”，就必须始终围绕主驾驶位设计，禁止凭空变成沙发、客厅、床、办公室等相似但错误的场景。
-- 如果语境和剧本存在冲突，先指出冲突，再以剧本明确的最新变化为准，不要自行脑补。
-- 用户负责说人话，AI负责懂影视。不要反过来要求用户先填写景别、焦段、运镜等参数。
-
-【原始剧本】
-${script}
-
-【导演翻译任务】
-请按照镜头实际执行顺序输出：
-1. 镜头目的：这一镜让观众看到/感受到什么。
-2. 景别与机位：根据叙事自行决定；说明镜头相对人物的位置。
-3. 构图：主体、前景、中景、背景和画面重心如何安排。
-4. 运镜：说明镜头从哪里开始、如何运动；没有必要就保持稳定，不要炫技。
-5. 动作与表演：把动作拆成连续的时间过程，写清身体重心、视线、手脚/爪子位置、表情和情绪变化。
-6. 环境动态：补少量自然环境动作，不能抢主体。
-7. 连贯性：严格保持场景、人物位置、道具位置、动作方向和前后状态一致。
-8. LibTV 最终 Prompt：把最必要的信息整合成一段可直接生成的中文 Prompt。具体、准确、短而完整，不堆“电影感、大片感、8K、高级感”等空词。
-
-【输出原则】
-- 不要为了增加细节而改变故事。
-- 不要把“在哪里”当成可以自由发挥的装饰，它是生成结果的核心约束。
-- 重点深化“怎么拍、怎么动、怎么变化”，而不是把文字无限写长。
-- 如果人物/动物有特殊身体结构，严格保持解剖结构，禁止多余肢体、人类手指等错误。
-- 最终目标：我写完剧本后，不再需要手工经历“想景别 → 想构图 → 想运镜 → 写动作 → 改 Prompt”这一串琐碎步骤。`;
-    }
-
-    function openAiDirectorModal() {
-      const text = getEditorText().trim();
-            try { aiDirectorContext.value = localStorage.getItem('sbw_scene_context') || aiDirectorContext.value || ''; } catch(e) {}
-      aiDirectorTaskWrap.style.display = 'none';
-      aiDirectorTaskEl.textContent = '';
-      lastDirectorTask = '';
-      aiDirectorStatus.textContent = aiDirectorScript.value ? '已读取当前剧本。先确认场景语境，再点击“生成导演任务”。' : '先写剧本，再补充场景语境。';
-      aiDirectorModal.classList.add('active');
-      setTimeout(() => aiDirectorContext.focus(), 30);
-    }
-    function closeAiDirectorModal(){ aiDirectorModal.classList.remove('active'); }
-    document.getElementById('aiDeepenBtn').addEventListener('click', openAiDirectorModal);
-    document.getElementById('aiDirectorCancel').addEventListener('click', closeAiDirectorModal);
-    aiDirectorModal.addEventListener('click', (e)=>{ if(e.target===aiDirectorModal) closeAiDirectorModal(); });
-
-    document.getElementById('aiDirectorBuild').addEventListener('click', ()=>{
-      const script=getEditorText().trim();
-      const context=aiDirectorContext.value.trim();
-      if(!script){ aiDirectorStatus.textContent='还没有剧本内容。'; return; }
-      lastDirectorTask=buildDirectorTask(script, context);
-      aiDirectorTaskEl.textContent=lastDirectorTask;
-      aiDirectorTaskWrap.style.display='block';
-      aiDirectorStatus.textContent='导演任务已生成。现在点 DeepSeek / Kimi / GPT / Gemini，会自动填入对应网页。';
-    });
-
-    document.querySelectorAll('#aiDirectorProviders [data-provider]').forEach(btn=>{
-      btn.addEventListener('click', async ()=>{
-        if(!lastDirectorTask){ aiDirectorStatus.textContent='请先点击“生成导演任务”。'; return; }
-        const provider=btn.dataset.provider;
-        aiDirectorStatus.textContent='正在打开 '+provider+' 并自动填入任务…';
-        try{
-          if(window.Handoff && Handoff.sendToChat){
-            const r=await Handoff.sendToChat(provider, lastDirectorTask);
-            aiDirectorStatus.textContent=r.message || '已填入，请点击发送。';
-          } else {
-            await navigator.clipboard.writeText(lastDirectorTask);
-            aiDirectorStatus.textContent='当前浏览器不支持自动交接，任务已复制。';
-          }
-        }catch(err){
-          try{ await navigator.clipboard.writeText(lastDirectorTask); }catch(e){}
-          aiDirectorStatus.textContent='自动填入失败，任务已复制到剪贴板。';
-        }
-      });
-    });
-
-    document.getElementById('aiDirectorCopy').addEventListener('click', async ()=>{
-      if(!lastDirectorTask){ aiDirectorStatus.textContent='请先点击“生成导演任务”。'; return; }
-      if(window.Handoff && Handoff.copyText){ await Handoff.copyText(lastDirectorTask); aiDirectorStatus.textContent='导演任务已复制。'; }
-      else { navigator.clipboard.writeText(lastDirectorTask).then(()=>aiDirectorStatus.textContent='导演任务已复制。').catch(()=>aiDirectorStatus.textContent='复制失败。'); }
     });
 
     // =====================

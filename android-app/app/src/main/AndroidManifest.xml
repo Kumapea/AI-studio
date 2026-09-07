@@ -8,8 +8,6 @@
     <application
         android:allowBackup="true"
         android:label="AI制片台"
-        android:icon="@drawable/logo"
-        android:roundIcon="@drawable/logo"
         android:theme="@style/AppTheme"
         android:resizeableActivity="true">
         <activity android:name=".MainActivity" android:exported="true">
@@ -21,14 +19,13 @@
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="video/*" />
-                <data android:mimeType="text/plain" />
             </intent-filter>
         </activity>
         <service
             android:name=".FloatingBubbleService"
             android:exported="false"
             android:foregroundServiceType="specialUse">
-            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="AI制片台悬浮研究按钮，用于视频创作者在刷视频时快速记录研究对象" />
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="AI制片台悬浮按钮，用于视频创作者快速进入视频分析与增长诊断" />
         </service>
     </application>
 </manifest>
